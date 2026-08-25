@@ -1,0 +1,6 @@
+BOT_TOKEN=
+ADMIN_ID=1427023555
+MINI_APP_URL=https://hshahahaha.github.io/ayman-ph-website/#/collection/best-selling
+DB_PATH=/data/kaleesha_bot.db
+
+# ضع قيمة BOT_TOKEN داخل Railway Variables فقط، ولا تضعها في هذا الملف أو GitHub.
