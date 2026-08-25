@@ -16,7 +16,7 @@
 
 ## إذا ظهرت نسخة قديمة في Railway
 
-اربط خدمة Railway بهذا المستودع الخاص فقط: `https://github.com/hshahahaha/kaleesha-telegram-bot`. بعد الربط، افتح الخدمة ثم اختر **Deployments** واضغط **Deploy Latest Commit** أو **Redeploy**. لا تنشئ خدمة جديدة من ملف ZIP قديم ولا تعتمد على نشر سابق.
+اربط خدمة Railway بهذا المستودع مباشرة: `https://github.com/hshahahaha/kaleesha-telegram-bot`. بعد الربط، افتح الخدمة ثم اختر **Deployments** واضغط **Deploy Latest Commit** أو **Redeploy**. لا تنشئ خدمة جديدة من ملف ZIP قديم ولا تعتمد على نشر سابق.
 
 بعد أن تصبح حالة النشر **Success**، افتح `Deploy Logs` وتأكد من ظهور الأمر `python kaleesha_bot_railway.py`. بعدها أرسل `/start` إلى البوت. النسخة الحديثة ترسل الصورة وتعليق «اضغط على الزر الموجود على اليسار كما في الصورة.» فقط، ولا تعرض زرًا سفليًا.
 
