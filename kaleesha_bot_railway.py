@@ -33,6 +33,8 @@ MINI_APP_URL = os.getenv(
 )
 DB_PATH = Path(os.getenv("DB_PATH", "kaleesha_bot.db"))
 START_IMAGE_PATH = Path(__file__).with_name("kaleesha_start_image.jpg")
+INSTAGRAM_FOLLOW_URL = "https://www.instagram.com/reel/DVMR8qRjRXH/?igsi=bHIyeGltcDJwNG5i"
+TIKTOK_FOLLOW_URL = "https://vt.tiktok.com/ZSVVcGRmW/"
 WAITING_BROADCAST = 1
 
 
@@ -54,6 +56,12 @@ def init_db() -> None:
                 is_active INTEGER NOT NULL DEFAULT 1
             )"""
         )
+        connection.execute(
+            """CREATE TABLE IF NOT EXISTS follow_proofs (
+                user_id INTEGER PRIMARY KEY,
+                submitted_at TEXT NOT NULL
+            )"""
+        )
 
 
 def register_user(tg_user) -> bool:
@@ -72,6 +80,21 @@ def register_user(tg_user) -> bool:
             (tg_user.id, tg_user.first_name, tg_user.username, now, now),
         )
     return existed is None
+
+
+def has_follow_proof(user_id: int) -> bool:
+    with db() as connection:
+        row = connection.execute("SELECT 1 FROM follow_proofs WHERE user_id = ?", (user_id,)).fetchone()
+    return row is not None
+
+
+def save_follow_proof(user_id: int) -> None:
+    submitted_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    with db() as connection:
+        connection.execute(
+            "INSERT OR REPLACE INTO follow_proofs (user_id, submitted_at) VALUES (?, ?)",
+            (user_id, submitted_at),
+        )
 
 
 def mark_inactive(user_id: int) -> None:
@@ -101,6 +124,15 @@ def admin_keyboard() -> InlineKeyboardMarkup:
     )
 
 
+def follow_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton("📸 متابعة إنستغرام", url=INSTAGRAM_FOLLOW_URL)],
+            [InlineKeyboardButton("🎵 متابعة تيك توك", url=TIKTOK_FOLLOW_URL)],
+        ]
+    )
+
+
 async def notify_new_user(context: ContextTypes.DEFAULT_TYPE, tg_user) -> None:
     username = f"@{tg_user.username}" if tg_user.username else "لا يوجد"
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -123,6 +155,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await notify_new_user(context, update.effective_user)
         except TelegramError as error:
             logger.warning("Could not notify admin: %s", error)
+    if not has_follow_proof(update.effective_user.id):
+        await update.message.reply_text(
+            "حتى تتمكن من استخدام البوت، تابع حسابنا على إنستغرام وتيك توك من الروابط أدناه، "
+            "ثم أرسل لقطة شاشة تثبت متابعة حساب إنستغرام مباشرة هنا.",
+            reply_markup=follow_keyboard(),
+        )
+        return
     if not START_IMAGE_PATH.is_file():
         raise RuntimeError(f"ملف صورة البداية غير موجود: {START_IMAGE_PATH}")
     with START_IMAGE_PATH.open("rb") as start_image:
@@ -130,6 +169,36 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             photo=start_image,
             caption="اضغط على الزر الموجود على اليسار كما في الصورة.",
         )
+
+
+async def follow_proof(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.effective_user or not update.effective_message:
+        return
+    user = update.effective_user
+    register_user(user)
+    if has_follow_proof(user.id):
+        await update.effective_message.reply_text("تم استلام لقطة المتابعة سابقًا. يمكنك استخدام البوت الآن.")
+        return
+    username = f"@{user.username}" if user.username else "لا يوجد"
+    try:
+        await context.bot.copy_message(
+            chat_id=ADMIN_ID,
+            from_chat_id=update.effective_message.chat_id,
+            message_id=update.effective_message.message_id,
+        )
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=(
+                "📸 لقطة متابعة إنستغرام جديدة\n\n"
+                f"👤 الاسم: {user.full_name}\n"
+                f"🔗 Username: {username}\n"
+                f"🆔 User ID: {user.id}"
+            ),
+        )
+    except TelegramError as error:
+        logger.warning("Could not forward follow proof: %s", error)
+    save_follow_proof(user.id)
+    await update.effective_message.reply_text("تم استلام لقطة الشاشة وإرسالها للمدير. يمكنك استخدام البوت الآن.")
 
 
 async def redirect_to_shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -228,6 +297,7 @@ def main() -> None:
     app.add_handler(CommandHandler("admin", admin))
     app.add_handler(CallbackQueryHandler(callbacks, pattern=r"^(?:admin:stats|broadcast:menu|broadcast:cancel)$"))
     app.add_handler(broadcast_flow)
+    app.add_handler(MessageHandler(filters.PHOTO, follow_proof))
     app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, redirect_to_shop))
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
