@@ -33,7 +33,7 @@ MINI_APP_URL = os.getenv(
 )
 DB_PATH = Path(os.getenv("DB_PATH", "kaleesha_bot.db"))
 START_IMAGE_PATH = Path(__file__).with_name("kaleesha_start_image.jpg")
-INSTAGRAM_FOLLOW_URL = "https://www.instagram.com/reel/DVMR8qRjRXH/?igsi=bHIyeGltcDJwNG5i"
+INSTAGRAM_FOLLOW_URL = "https://www.instagram.com/reel/DbtSxoythTw/?igsi=MWVsdHoxaHVlZDh4cA=="
 TIKTOK_FOLLOW_URL = "https://vt.tiktok.com/ZSVVcGRmW/"
 WAITING_BROADCAST = 1
 
