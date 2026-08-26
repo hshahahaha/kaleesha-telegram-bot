@@ -127,8 +127,8 @@ def admin_keyboard() -> InlineKeyboardMarkup:
 def follow_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton("📸 متابعة إنستغرام", url=INSTAGRAM_FOLLOW_URL)],
-            [InlineKeyboardButton("🎵 متابعة تيك توك", url=TIKTOK_FOLLOW_URL)],
+            [InlineKeyboardButton("📸 قناة الإنستغرام", url=INSTAGRAM_FOLLOW_URL)],
+            [InlineKeyboardButton("🎵 قناة التيك توك", url=TIKTOK_FOLLOW_URL)],
         ]
     )
 
@@ -157,8 +157,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             logger.warning("Could not notify admin: %s", error)
     if not has_follow_proof(update.effective_user.id):
         await update.message.reply_text(
-            "حتى تتمكن من استخدام البوت، تابع حسابنا على إنستغرام وتيك توك من الروابط أدناه، "
-            "ثم أرسل لقطة شاشة تثبت متابعة حساب إنستغرام مباشرة هنا.",
+            "🚀 حتى تكدر تستخدم البوت، لازم أول شي تشترك بالقناة 📺\n\n"
+            "✅ بعد الاشتراك، أرسل لقطة شاشة تثبت إنك مشترك، وراح يتم تفعيل البوت إلك.",
             reply_markup=follow_keyboard(),
         )
         return
@@ -198,7 +198,13 @@ async def follow_proof(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     except TelegramError as error:
         logger.warning("Could not forward follow proof: %s", error)
     save_follow_proof(user.id)
-    await update.effective_message.reply_text("تم استلام لقطة الشاشة وإرسالها للمدير. يمكنك استخدام البوت الآن.")
+    await update.effective_message.reply_text("✅ تم قبول لقطة الشاشة تلقائيًا. يمكنك استخدام البوت الآن.")
+    if START_IMAGE_PATH.is_file():
+        with START_IMAGE_PATH.open("rb") as start_image:
+            await update.effective_message.reply_photo(
+                photo=start_image,
+                caption="اضغط على الزر الموجود على اليسار كما في الصورة.",
+            )
 
 
 async def redirect_to_shop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

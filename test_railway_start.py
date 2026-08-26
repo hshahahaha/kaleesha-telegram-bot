@@ -24,7 +24,7 @@ class StartConfigurationTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("reply_markup", kwargs)
 
     async def test_follow_proof_is_forwarded_to_admin_and_saved(self):
-        message = SimpleNamespace(chat_id=55, message_id=77, reply_text=AsyncMock())
+        message = SimpleNamespace(chat_id=55, message_id=77, reply_text=AsyncMock(), reply_photo=AsyncMock())
         user = SimpleNamespace(id=42, first_name="اختبار", full_name="مستخدم اختبار", username="test")
         update = SimpleNamespace(effective_user=user, effective_message=message)
         context = SimpleNamespace(bot=SimpleNamespace(copy_message=AsyncMock(), send_message=AsyncMock()))
@@ -33,6 +33,7 @@ class StartConfigurationTests(unittest.IsolatedAsyncioTestCase):
         context.bot.copy_message.assert_awaited_once_with(chat_id=bot.ADMIN_ID, from_chat_id=55, message_id=77)
         saved.assert_called_once_with(42)
         message.reply_text.assert_awaited_once()
+        message.reply_photo.assert_awaited_once()
 
 
 if __name__ == "__main__":
